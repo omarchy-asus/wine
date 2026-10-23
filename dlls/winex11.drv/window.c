@@ -1403,7 +1403,10 @@ static void window_set_monitors( struct x11drv_win_data *data, const struct moni
         XSendEvent( data->display, DefaultRootWindow( data->display ), False,
                     SubstructureRedirectMask | SubstructureNotifyMask, &xev );
 
-        if (is_fullscreen)
+        /* a window manager that doesn't support _NET_WM_FULLSCREEN_MONITORS ignores the request and
+         * will never send the ConfigureNotify we would be waiting for, blocking any further config
+         * change. Let the config request go through instead, the window manager will answer it. */
+        if (is_fullscreen && is_net_supported( x11drv_atom(_NET_WM_FULLSCREEN_MONITORS) ))
         {
             data->configure_serial = data->monitors_serial;
             data->pending_state.rect = data->rects.visible;
